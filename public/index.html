@@ -1,0 +1,200 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>CivicAI</title>
+<style>
+:root{--bg:#f5f8fc;--cd:#fff;--tx:#0b1f3a;--mu:#5b6b82;--pr:#0b2a5b;--ac:#0e8fa8;--bd:#e2e8f0;--ok:#12805c;--map:#eaf1f8;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0a1424;--cd:#111e33;--tx:#e8eef7;--mu:#93a4bd;--pr:#3b6fd8;--bd:#22324d;--map:#152540}}
+:root[data-theme=dark]{--bg:#0a1424;--cd:#111e33;--tx:#e8eef7;--mu:#93a4bd;--pr:#3b6fd8;--bd:#22324d;--map:#152540}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--tx)}
+h1,h2,h3{margin:0 0 8px;line-height:1.2}h1{font-size:clamp(28px,5vw,44px)}p{margin:6px 0}.mu{color:var(--mu)}.w{max-width:1100px;margin:0 auto;padding:20px 16px}
+.nav{display:flex;align-items:center;gap:6px;padding:10px 16px;background:var(--cd);border-bottom:1px solid var(--bd);position:sticky;top:env(safe-area-inset-top,0px);z-index:5;flex-wrap:wrap}
+.brand{font-weight:800;font-size:20px;color:var(--pr);cursor:pointer;margin-right:8px}.brand b{color:var(--ac)}
+.nav a{padding:6px 10px;border-radius:8px;color:var(--mu);cursor:pointer;font-weight:500}.nav a.on{background:var(--pr);color:#fff}.sp{flex:1}
+.btn{border:0;border-radius:10px;padding:10px 16px;font:inherit;font-weight:600;cursor:pointer;background:var(--pr);color:#fff}.btn.s{background:transparent;color:var(--tx);border:1px solid var(--bd)}.btn.g{background:var(--ok)}
+.card{background:var(--cd);border:1px solid var(--bd);border-radius:14px;padding:16px;box-shadow:0 1px 3px rgba(11,42,91,.07)}
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}.two{display:grid;gap:14px;grid-template-columns:2fr 1fr}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}.cc{cursor:pointer}.cc:hover{border-color:var(--ac)}
+.pill{display:inline-block;padding:2px 10px;border-radius:99px;font-size:12px;font-weight:600;background:var(--bd);color:var(--tx)}
+.High{background:#fee2e2;color:#b91c1c}.Medium{background:#fef3c7;color:#b45309}.Low,.Resolved{background:#dcfce7;color:#166534}
+label{display:block;margin:10px 0;font-weight:600;font-size:14px}input,select,textarea{width:100%;padding:10px;border:1px solid var(--bd);border-radius:10px;font:inherit;background:var(--cd);color:var(--tx);margin-top:4px}
+.stat b{display:block;font-size:28px;color:var(--pr)}.hero{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:center;padding:30px 0}
+.chip{display:inline-block;margin:4px;padding:8px 14px;border:1px solid var(--bd);border-radius:99px;background:var(--cd)}
+.cat{text-align:center;cursor:pointer;font-weight:600}.cat.on{border:2px solid var(--ac)}.cat span{font-size:26px;display:block}
+.tl{list-style:none;padding:0;margin:0}.tl li{padding:8px 0 8px 4px;color:var(--mu)}.tl li.d{color:var(--ok);font-weight:600}
+.auth{max-width:440px;margin:30px auto}.adm{display:grid;grid-template-columns:210px 1fr}.side{background:#0b2a5b;color:#fff;padding:16px;min-height:100vh}
+.side a{display:block;padding:9px 10px;border-radius:8px;cursor:pointer;color:#cfe0ff}.side a.on{background:rgba(255,255,255,.15);color:#fff}.am{padding:18px;min-width:0}
+.tw{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:9px 8px;border-bottom:1px solid var(--bd);text-align:left;white-space:nowrap}
+.bar{height:10px;border-radius:6px;background:var(--ac)}.ai{border-left:4px solid var(--ac)}.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--pr);color:#fff;padding:10px 18px;border-radius:10px;display:none;z-index:9}
+@media(max-width:760px){.hero,.two{grid-template-columns:1fr}.adm{grid-template-columns:1fr}.side{min-height:0;display:flex;overflow-x:auto;gap:4px}.side .brand{display:none}}
+</style><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script src="/i18n/en.js"></script>
+<script src="/i18n/kn.js"></script>
+<script src="/i18n/hi.js"></script>
+<script src="/i18n/te.js"></script>
+<script src="/i18n/ta.js"></script>
+<script src="/i18n/mr.js"></script>
+</head><body><div id="app"></div><div id="t" class="toast"></div>
+<script>
+const $=s=>document.querySelector(s),q=id=>C.find(c=>c.id==id),pc=p=>({High:'#dc2626',Medium:'#d97706',Low:'#12805c'})[p];
+const CATS={Roads:'🛣️',Streetlights:'💡',Water:'💧',Waste:'🗑️',Sanitation:'🚰',Transport:'🚌',Electricity:'⚡',Healthcare:'🏥',Education:'🎓',Other:'📌'};
+const DEPTS=['Roads','Water','Sanitation','Waste Management','Electricity','Transport','Healthcare','Education'],STS=['Submitted','Under Review','Assigned','In Progress','Resolved'];
+/* i18n — dictionaries live in /i18n/<locale>.js; missing keys fall back to English */
+const LANGS={en:['English','en-IN'],kn:['ಕನ್ನಡ','kn-IN'],hi:['हिन्दी','hi-IN'],te:['తెలుగు','te-IN'],ta:['தமிழ்','ta-IN'],mr:['मराठी','mr-IN']};
+const LS={get(k,d){try{const v=localStorage.getItem('civicai.'+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem('civicai.'+k,JSON.stringify(v))}catch(e){}}};
+let LANG=LS.get('lang','en');if(!LANGS[LANG])LANG='en';
+function t(k,p){const D=window.I18N||{};let s=(D[LANG]&&D[LANG][k])??(D.en&&D.en[k])??'';if(p)for(const x in p)s=s.split('{'+x+'}').join(p[x]);return s}
+const sl=s=>String(s).toLowerCase().replace(/\s+/g,'_'),tc=c=>t('cat_'+sl(c)),ts=s=>t('st_'+sl(s)),tp=p=>t('pri_'+sl(p)),td=d=>t('dept_'+sl(d));
+const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]);
+const langOpts=v=>Object.keys(LANGS).map(k=>`<option value="${k}" ${k==v?'selected':''}>${LANGS[k][0]}`).join('');
+/* complaint data — single source of truth is the /api/complaints backend */
+const DEV=LS.get('dev','')||(()=>{const d=(crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random().toString(36).slice(2));LS.set('dev',d);return d})();
+let C=[],LOADED=0;
+function api(p,o={}){return fetch('/api/'+p,{...o,headers:{'content-type':'application/json','x-civic-device':DEV,...(o.headers||{})}}).then(async r=>{const j=await r.json().catch(()=>({}));if(!r.ok){const e=new Error(j.error||r.status);e.status=r.status;e.body=j;throw e}return j})}
+const put=c=>{const i=C.findIndex(x=>x.id==c.id),o=C[i];if(o&&!c.fb)c.fb=o.fb;i<0?C.unshift(c):C[i]=c;return c};
+async function load(){try{const L=await api('complaints'),ch=JSON.stringify(L)!=JSON.stringify(C);C=L;const f=LOADED!=1;LOADED=1;if(ch||f)refresh()}catch(e){if(LOADED!=1){LOADED=-1;refresh()}}}
+function refresh(){const v=S.v,a=document.activeElement;if(v=='land'||v=='auth'||v=='profile'||v=='aset'||v=='adetail'||(v=='report'&&S.step<5)||(v=='detail'&&S.fbOpen)||(a&&a.closest&&a.closest('#app')&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)))return;R()}
+const mine=c=>c.owner==DEV||c.cit==S.user.name;
+const S={v:'land',role:'',mode:'login',step:1,f:'All',sel:null,heat:1,fl:{},dr:{},
+user:Object.assign({name:'Asha Rao',email:'asha@example.in',mobile:'9876543210',loc:'Ward 24, Bengaluru',lang:'en'},LS.get('user',{})),adm:Object.assign({name:'Ravi Kumar',dept:'Roads',role:'Zonal Officer',email:'ravi@city.gov.in',lang:'en'},LS.get('adm',{}))};
+S.user.lang=S.adm.lang=LANG;
+const LB={name:'name',email:'email',mobile:'mobile',loc:'location',lang:'preferred_language',dept:'department',role:'role'};
+const opt=(a,v,ph,lf)=>(ph!=null?`<option value="">${ph}`:'')+a.map(x=>`<option value="${x}" ${x==v?'selected':''}>${lf?lf(x):x}`).join('');
+const TI={Submitted:0,'Under Review':1,Assigned:2,'In Progress':4,Resolved:5};
+const tl=c=>`<ul class=tl>${[0,1,2,3,4,5].map(i=>`<li class="${i<=TI[c.st]?'d':''}">${i<=TI[c.st]?'✓':'○'} ${t('tl_'+i)}</li>`).join('')}</ul>`;
+function toast(m){const e=$('#t');e.textContent=m;e.style.display='block';clearTimeout(e._h);e._h=setTimeout(()=>e.style.display='none',m.length>60?4000:2200)}
+function go(v){stopMic();S.pop=null;S.v=v;R();scrollTo(0,0);if(v!='land'&&v!='auth')load();if(v=='nearby')nearLocate()}
+function R(){if(MAP){MAP.remove();MAP=null}const v=S.v;document.documentElement.lang=LANG;$('#app').innerHTML=v=='land'?landV():v=='auth'?authV():S.role=='admin'?admV():citV();initMap();micUI();if(S.pop&&$('#pop'))pin(S.pop,1)}
+function setAuth(m){S.mode=m;go('auth')}
+function start(v){if(S.role){v=='report'?newR():go(v)}else{S.after=v;setAuth('login')}}
+function login(e){e.preventDefault();S.role=$('#rl').value;if(S.mode=='signup'&&S.role=='citizen'){Object.assign(S.user,{name:$('#nm').value,email:$('#em').value,mobile:$('#mb').value,loc:$('#lc').value||S.user.loc});LS.set('user',S.user);if($('#lg').value!=LANG)setLang($('#lg').value)}
+const a=S.after;S.after=0;S.role=='admin'?go('adash'):a=='report'?newR():go(a||'home')}
+function out(){S.role='';go('land')}
+function openC(id){S.sel=id;S.fbOpen=null;go(S.role=='admin'?'adetail':'detail')}
+function newR(){S.dr={t:'',d:'',photo:'',file:null,loc:'',cat:'',lat:null,lng:null};S.step=1;go('report')}
+function setLang(l){if(!LANGS[l])return;LANG=l;S.user.lang=S.adm.lang=l;LS.set('lang',l);LS.set('user',S.user);LS.set('adm',S.adm);R()}
+const brand=`<span class=brand onclick="go('${'land'}')">Civic<b>AI</b></span>`;
+function cardC(c){return `<div class="card cc" onclick="openC('${c.id}')"><div class=row><b>${c.id}</b><span class="pill ${c.pri}">${t('priority_label',{p:tp(c.pri)})}</span></div><div>${CATS[c.cat]} ${tc(c.cat)}</div><p>${esc(c.d)}</p><small class=mu>📍 ${esc(c.loc)} · ${c.dt}</small><div style="margin-top:8px"><span class="pill ${c.st=='Resolved'?'Resolved':''}">${ts(c.st)}</span></div></div>`}
+function city(){return `<svg viewBox="0 0 400 260" style="width:100%;border-radius:16px;background:var(--map)"><circle cx=320 cy=50 r=24 fill="#f5c26b"/><g fill="#0b2a5b" opacity=.9><rect x=30 y=100 width=50 height=110 /><rect x=90 y=60 width=60 height=150 /><rect x=160 y=110 width=45 height=100 /><rect x=215 y=80 width=55 height=130 /><rect x=280 y=120 width=60 height=90 /></g><g fill="#7dd3e0"><rect x=100 y=75 width=10 height=10 /><rect x=125 y=95 width=10 height=10 /><rect x=225 y=100 width=10 height=10 /><rect x=245 y=130 width=10 height=10 /><rect x=40 y=120 width=10 height=10 /></g><rect y=210 width=400 height=50 fill="#334155"/><path d="M0 235H400" stroke="#fff" stroke-dasharray="14 10" stroke-width=3 /><circle cx=130 cy=222 r=9 fill="#dc2626" /><text x=122 y=226 font-size=11 fill="#fff">!</text></svg>`}
+function landV(){return `<div class=nav>${brand}<small class=mu>${t('tagline')}</small><span class=sp></span><button class="btn s" onclick="setAuth('login')">${t('login')}</button><button class=btn onclick="setAuth('signup')">${t('sign_up')}</button></div><div class=w>
+<section class=hero><div><h1>${t('hero_title')}</h1><p class=mu>${t('hero_sub')}</p><p><button class=btn onclick="start('report')">${t('report_a_problem')}</button> <button class="btn s" onclick="start('nearby')">${t('explore_nearby')}</button></p></div>${city()}</section>
+<h2>${t('how_it_works')}</h2><div class=grid>${[1,2,3,4].map(i=>`<div class=card><span class=pill>${i}</span><h3>${t('how_'+i+'_t')}</h3><p class=mu>${t('how_'+i+'_d')}</p></div>`).join('')}</div>
+<h2 style="margin-top:28px">${t('problems_we_solve')}</h2><div>${Object.keys(CATS).filter(k=>k!='Other').map(k=>`<span class=chip>${CATS[k]} ${tc(k)}</span>`).join('')}</div>
+<h2 style="margin-top:28px">${t('why_civicai')}</h2><div class=grid>${[1,2,3,4].map(i=>`<div class=card>✔ <b>${t('why_'+i)}</b></div>`).join('')}</div></div>`}
+function authV(){const s=S.mode=='signup';return `<div class=nav>${brand}<span class=sp></span><button class="btn s" onclick="go('land')">${t('back')}</button></div><div class=w><form class="card auth" onsubmit="login(event)"><h2>${s?t('create_account'):t('welcome_back')}</h2>
+${s?`<label>${t('name')}<input id=nm required></label><label>${t('email')}<input type=email id=em required></label><label>${t('mobile_number')}<input id=mb required></label>`:`<label>${t('email_or_mobile')}<input id=em required></label>`}
+<label>${t('password')}<input type=password required minlength=4></label>${s?`<label>${t('location')}<input id=lc placeholder="${t('ward_area_ph')}"></label><label>${t('preferred_language')}<select id=lg>${langOpts(LANG)}</select></label>`:''}
+<label>${t('role')}<select id=rl><option value=citizen>${t('citizen')}<option value=admin>${t('gov_admin')}</select></label><button class=btn style="width:100%">${s?t('sign_up'):t('login')}</button><p class=mu>${t('demo_login_note')}</p><a style="color:var(--ac);cursor:pointer" onclick="setAuth('${s?'login':'signup'}')">${s?t('have_account'):t('new_here')}</a></form></div>`}
+/* map — Leaflet + OpenStreetMap tiles, Nominatim geocoding */
+let MAP=null,MK={},DRM=null,HM=null;const NOM='https://nominatim.openstreetmap.org/';
+const mapBox=()=>`<div id=lmap style="width:100%;aspect-ratio:600/380;background:var(--map);border-radius:12px;display:block;position:relative;z-index:0"></div>`;
+const pinIcon=()=>L.divIcon({className:'',html:'<span style="font-size:30px;line-height:30px">📍</span>',iconSize:[30,30],iconAnchor:[15,30]});
+const shortName=n=>String(n||'').split(',').map(s=>s.trim()).filter(Boolean).slice(0,4).join(', ');
+function hav(a,b){const r=Math.PI/180,dl=(b[0]-a[0])*r,dg=(b[1]-a[1])*r,x=Math.sin(dl/2)**2+Math.cos(a[0]*r)*Math.cos(b[0]*r)*Math.sin(dg/2)**2;return 12742e3*Math.asin(Math.sqrt(x))}
+const dist=c=>S.here&&c.lat!=null&&c.lng!=null?hav(S.here,[c.lat,c.lng]):null;
+const fmtD=m=>m==null?'':m<1000?t('away_m',{n:Math.max(10,Math.round(m/10)*10)}):t('away_km',{n:(m/1000).toFixed(m<10000?1:0)});
+function initMap(){const el=$('#lmap');if(!el||!window.L)return;MK={};DRM=HM=null;
+MAP=L.map(el).setView(S.mv?S.mv.c:[22.5,79],S.mv?S.mv.z:5);
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright" target=_blank>OpenStreetMap</a>'}).addTo(MAP);
+if(S.v=='report'){const d=S.dr;if(d.lat!=null){DRM=L.marker([d.lat,d.lng],{icon:pinIcon()}).addTo(MAP);MAP.setView([d.lat,d.lng],S.mv?Math.max(S.mv.z,15):16)}else if(!S.mv&&S.here)MAP.setView(S.here,15);MAP.on('click',e=>setLoc(e.latlng.lat,e.latlng.lng))}
+else{const pts=[];C.forEach(c=>{if(c.lat==null||c.lng==null)return;pts.push([c.lat,c.lng]);
+if(S.v=='amap'&&S.heat)L.circle([c.lat,c.lng],{radius:150*Math.sqrt(c.n),stroke:false,fillColor:'#dc2626',fillOpacity:.25,interactive:false}).addTo(MAP);
+MK[c.id]=L.circleMarker([c.lat,c.lng],{radius:8+Math.min(c.n,18)/3,color:'#fff',weight:2,fillColor:pc(c.pri),fillOpacity:1,bubblingMouseEvents:false}).addTo(MAP).on('click',()=>pin(c.id,1))});
+if(S.v=='nearby'){hereMk();MAP.on('click',e=>{if(S.hereSrc=='gps')return;S.here=[e.latlng.lat,e.latlng.lng];S.hereSrc='map';S.mv={c:MAP.getCenter(),z:MAP.getZoom()};R()})}
+if(!S.mv){if(S.v=='nearby'&&S.here)MAP.setView(S.here,14);else if(pts.length)MAP.fitBounds(pts,{padding:[30,30],maxZoom:15})}}
+MAP.on('moveend',()=>{if(MAP)S.mv={c:MAP.getCenter(),z:MAP.getZoom()}})}
+function hereMk(){if(!MAP||!S.here)return;if(HM)HM.remove();HM=L.circleMarker(S.here,{radius:9,color:'#fff',weight:3,fillColor:'#3b6fd8',fillOpacity:1,bubblingMouseEvents:false}).addTo(MAP).bindTooltip(S.hereSrc=='gps'?t('you_are_here'):t('selected_location'))}
+function nearLocate(){if(!navigator.geolocation)return toast(t('nearby_geo_denied'));navigator.geolocation.getCurrentPosition(p=>{S.here=[p.coords.latitude,p.coords.longitude];S.hereSrc='gps';if(S.v=='nearby'){S.mv={c:S.here,z:14};R()}},()=>{if(S.v=='nearby')toast(t('nearby_geo_denied'))},{enableHighAccuracy:true,timeout:15000,maximumAge:60000})}
+function pin(id,silent){const c=q(id),el=$('#pop');if(!c||!el)return;S.pop=id;const m=fmtD(dist(c));el.innerHTML=`<b>${esc(c.d)}</b><p>${CATS[c.cat]} ${tc(c.cat)} · <span class="pill ${c.pri}">${tp(c.pri)}</span></p><p>${t('related_reports')}: <b>${c.n}</b></p><p>📍 ${esc(c.loc)}${m?' · '+m:''}</p><p>${t('status')}: ${ts(c.st)} · ${t('reported_on',{date:c.dt})}</p><button class="btn s" onclick="openC('${c.id}')">${t('open')}</button>`;if(!silent&&MAP&&MK[id])MAP.panTo(MK[id].getLatLng())}
+let GT=0;function setLoc(lat,lng,label){const d=S.dr,tk=++GT;d.lat=lat;d.lng=lng;d.loc=label||`${t('selected_location')} (${lat.toFixed(5)}, ${lng.toFixed(5)})`;
+if(MAP){if(DRM)DRM.setLatLng([lat,lng]);else DRM=L.marker([lat,lng],{icon:pinIcon()}).addTo(MAP)}const b=$('#lsel');if(b)b.textContent=d.loc;
+if(!label)fetch(`${NOM}reverse?format=jsonv2&lat=${lat}&lon=${lng}&zoom=18&accept-language=${LANG}`).then(r=>r.ok?r.json():{}).then(j=>{if(tk!=GT||!j.display_name)return;d.loc=shortName(j.display_name);const b=$('#lsel');if(b)b.textContent=d.loc}).catch(()=>{})}
+function curLoc(){if(!navigator.geolocation)return toast(t('geo_unsupported'));toast(t('locating_you'));
+navigator.geolocation.getCurrentPosition(p=>{const la=p.coords.latitude,ln=p.coords.longitude;S.here=[la,ln];S.hereSrc='gps';setLoc(la,ln);if(MAP)MAP.setView([la,ln],17)},
+e=>{toast(e.code==1?t('geo_denied'):t('geo_unavailable'));const i=$('#ls');if(i)i.focus()},{enableHighAccuracy:true,timeout:15000,maximumAge:0})}
+let LST=0,LSN=0;function lsIn(v){clearTimeout(LST);v=v.trim();if(v.length<3){$('#lsr').innerHTML='';return}LST=setTimeout(()=>lsGo(v),450)}
+function lsGo(v){v=v.trim();if(!v)return;const n=++LSN,r=$('#lsr'),c=S.dr.lat!=null?[S.dr.lat,S.dr.lng]:S.here,vb=c?`&viewbox=${c[1]-.5},${c[0]+.5},${c[1]+.5},${c[0]-.5}`:'';r.innerHTML=`<p class=mu>${t('searching')}</p>`;
+fetch(`${NOM}search?format=jsonv2&limit=5&q=${encodeURIComponent(v)}&accept-language=${LANG}${vb}`).then(x=>{if(!x.ok)throw 0;return x.json()}).then(L=>{if(n!=LSN)return;S.res=L;
+r.innerHTML=L.length?L.map((x,i)=>`<div class="card cc" style="margin:6px 0;padding:10px" onclick="lsPick(${i})">📍 ${esc(x.display_name)}</div>`).join(''):`<p class=mu>${t('no_results')}</p>`}).catch(()=>{if(n==LSN)r.innerHTML=`<p class=mu>${t('search_failed')}</p>`})}
+function lsPick(i){const x=S.res[i];if(!x)return;const la=+x.lat,ln=+x.lon;++LSN;$('#lsr').innerHTML='';$('#ls').value=shortName(x.display_name);setLoc(la,ln,shortName(x.display_name));if(MAP)MAP.setView([la,ln],17)}
+/* citizen */
+const CN=[['home','home'],['report','report_problem'],['mine','my_complaints'],['nearby','nearby_issues'],['notif','notifications'],['profile','profile']];
+function citV(){const P={home:homeV,report:repV,mine:mineV,detail:detV,nearby:nearV,notif:notV,profile:profV}[S.v]();
+return `<div class=nav>${brand.replace('land','home')}${CN.map(([k,l])=>`<a class="${S.v==k||(S.v=='detail'&&k=='mine')?'on':''}" onclick="${k=='report'?'newR()':`go('${k}')`}">${t(l)}</a>`).join('')}<span class=sp></span><button class="btn s" onclick="out()">${t('logout')}</button></div><div class=w>${P}</div>`}
+function homeV(){const m=C.filter(mine),a=m.filter(c=>c.st!='Resolved').length,st=(n,l)=>`<div class="card stat"><b>${n}</b>${l}</div>`;
+return `<div class=row><h2>${t('hello',{name:esc(S.user.name.split(' ')[0])})}</h2><button class=btn onclick="newR()">${t('report_btn')}</button></div><div class=grid>${st(m.length,t('total_complaints'))}${st(a,t('active_complaints'))}${st(m.length-a,t('resolved_complaints'))}${st(C.length-m.length,t('nearby_issues'))}</div><h3 style="margin-top:22px">${t('recent_complaints')}</h3><div class=grid>${m.slice(0,3).map(cardC).join('')}</div>`}
+const empty=()=>`<p class=mu>${LOADED==1?t('no_complaints_here'):LOADED<0?t('load_failed'):t('loading')}</p>`;
+function mineV(){const m=C.filter(c=>mine(c)&&(S.f=='All'||(S.f=='Resolved')==(c.st=='Resolved')));
+return `<h2>${t('my_complaints')}</h2><p>${['All','Active','Resolved'].map(f=>`<button class="btn ${S.f==f?'':'s'}" onclick="S.f='${f}';R()">${t('filter_'+f.toLowerCase())}</button>`).join(' ')}</p><div class=grid>${m.map(cardC).join('')||empty()}</div>`}
+function fbV(c){if(c.fb){const r=c.fb.rating;return `<p><b>${t('feedback_given',{r})}</b> ${'★'.repeat(r)}${'☆'.repeat(5-r)}</p>${c.fb.comment?`<p class=mu>${esc(c.fb.comment)}</p>`:''}`}
+if(S.fbOpen!=c.id)return `<button class=btn onclick="S.fbOpen='${c.id}';S.fbR=0;S.fbC='';R()">${t('give_feedback')}</button>`;
+return `<div class=card style="margin-top:8px"><h3>${t('feedback_title')}</h3><label>${t('rating')}</label><p>${[1,2,3,4,5].map(i=>`<button class="btn ${S.fbR>=i?'':'s'}" onclick="S.fbR=${i};R()">★ ${i}</button>`).join(' ')}</p><label>${t('comment_optional')}<textarea id=fbc rows=3 placeholder="${t('comment_ph')}" oninput="S.fbC=this.value">${esc(S.fbC)}</textarea></label><p><button class="btn s" onclick="S.fbOpen=null;R()">${t('cancel')}</button> <button class=btn id=fbs onclick="sendFb('${c.id}')">${t('submit_feedback')}</button></p></div>`}
+async function sendFb(id){if(!S.fbR)return toast(t('feedback_pick_rating'));if(S.busy)return;S.busy=1;const b=$('#fbs');if(b){b.disabled=true;b.textContent=t('submitting')}
+try{const r=await api(`complaints/${id}/feedback`,{method:'POST',body:JSON.stringify({rating:S.fbR,comment:S.fbC||''})});q(id).fb=r;S.fbOpen=null;R();toast(t('feedback_thanks'))}
+catch(e){if(e.status==409){q(id).fb=e.body;S.fbOpen=null;R();toast(t('feedback_already'))}else{toast(t('feedback_failed'));if(b){b.disabled=false;b.textContent=t('submit_feedback')}}}finally{S.busy=0}}
+function detV(){const c=q(S.sel);if(!c)return `<button class="btn s" onclick="go('mine')">${t('back_arrow')}</button>${empty()}`;return `<button class="btn s" onclick="go('mine')">${t('back_arrow')}</button><h2 style="margin-top:12px">${t('complaint_n',{id:c.id})}</h2><div class=two><div class=card><p><b>${t('category')}:</b> ${CATS[c.cat]} ${tc(c.cat)}</p><p><b>${t('problem')}:</b> ${esc(c.d)}</p><p><b>${t('location')}:</b> ${esc(c.loc)}</p><p><b>${t('priority')}:</b> <span class="pill ${c.pri}">${tp(c.pri)}</span></p><p><b>${t('department')}:</b> ${td(c.dept)}</p>
+${c.photo?`<a href="${esc(c.photo)}" target=_blank rel=noopener><img src="${esc(c.photo)}" alt="${t('photo')}" style="max-width:100%;border-radius:10px"></a>`:`<div class=card style="text-align:center" >${t('photo_placeholder')}</div>`}<p><b>${t('latest_update')}:</b> ${esc((c.up||[]).slice(-1)[0])||t('default_update')}</p><p><b>${t('expected_action')}:</b> ${t('expected_action_text')}</p>${fbV(c)}</div><div class=card><h3>${t('timeline')}</h3>${tl(c)}</div></div>`}
+function nearV(){const L=C.filter(c=>c.lat!=null).map(c=>[c,dist(c)]);if(S.here)L.sort((a,b)=>a[1]-b[1]);
+return `<h2>${t('nearby_issues')}</h2><p class=mu>${t('nearby_legend')}</p><div class=two><div>${mapBox()}<div id=pop class=card style="margin-top:12px"><span class=mu>${t('select_marker')}</span></div></div><div style="display:grid;gap:8px;align-content:start"><h3>${t('list_view')}</h3>${L.map(([c,m])=>`<div class="card cc" onclick="pin('${c.id}')"><span class="pill ${c.pri}">${tp(c.pri)}</span> <b>${tc(c.cat)}</b><br>${esc(c.d)}${m!=null?`<br><small class=mu>📍 ${fmtD(m)}</small>`:''}</div>`).join('')||empty()}</div></div>`}
+function notV(){const a=S.role=='admin',L=a?[t('notif_a1'),t('notif_a2')]:[t('notif_c1',{id:'CIV-10245'}),t('notif_c2'),t('notif_c3',{id:'CIV-10190'})];
+return `<h2>${t('notifications')}</h2>${L.map(x=>`<div class=card style="margin-bottom:10px">🔔 ${x}</div>`).join('')}`}
+function profV(){const o=S.role=='admin'?S.adm:S.user;return `<h2>${t('profile')}</h2><form class="card" style="max-width:480px" onsubmit="saveProf(event)">${Object.keys(o).map(k=>`<label>${t(LB[k])}${k=='lang'?`<select id=p_lang>${langOpts(LANG)}</select>`:`<input id=p_${k} value="${esc(o[k])}">`}</label>`).join('')}<button class=btn>${t('save')}</button></form>`}
+function saveProf(e){e.preventDefault();const o=S.role=='admin'?S.adm:S.user;for(const k in o)o[k]=$('#p_'+k).value;LS.set('user',S.user);LS.set('adm',S.adm);if(o.lang!=LANG)setLang(o.lang);toast(t('profile_saved'))}
+/* report wizard */
+function repV(){const d=S.dr,s=S.step,lab=['step_describe','step_location','step_category','step_review'];
+const nx=(s<4?`<button class=btn onclick="nextS()">${t('next')}</button>`:`<button class="btn g" id=subb onclick="sub()">${t('submit_complaint')}</button>`),bk=s>1?`<button class="btn s" onclick="S.step--;R()">${t('back')}</button>`:'';
+let b='';
+if(s==1)b=`<label>${t('short_title')}<input value="${esc(d.t)}" oninput="S.dr.t=this.value"></label><label>${t('description')}<textarea id=dsc rows=5 placeholder="${t('desc_ph')}" oninput="S.dr.d=this.value">${esc(d.d)}</textarea></label><button class="btn s" id=micb onclick="mic()">${t('voice_input')}</button> <button class="btn s" onclick="$('#ph').click()">${t('upload_photo')}</button><input type=file id=ph accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" hidden onchange="pickPhoto(this)">${d.photo?`<p><img src="${d.photo}" style="max-width:220px;border-radius:10px"></p>`:''}`;
+if(s==2)b=`<p><button class="btn s" onclick="curLoc()">${t('use_current_location')}</button></p><label>${t('search_location')}<input id=ls placeholder="${t('search_ph')}" autocomplete=off oninput="lsIn(this.value)" onkeydown="if(event.key=='Enter'){event.preventDefault();lsGo(this.value)}"></label><div id=lsr></div><p class=mu>${t('tap_map')}</p>${mapBox()}<p><b id=lsel>${d.loc?esc(d.loc):t('no_location_selected')}</b></p>`;
+if(s==3)b=`<div class=grid>${Object.keys(CATS).map(k=>`<div class="card cat ${d.cat==k?'on':''}" onclick="S.dr.cat='${k}';R()"><span>${CATS[k]}</span>${tc(k)}</div>`).join('')}</div>`;
+if(s==4)b=`<div class=card><p><b>${t('description')}:</b> ${d.t?esc(d.t)+' – ':''}${esc(d.d)}</p><p><b>${t('photo')}:</b> ${d.photo?`<img src="${d.photo}" style="max-width:160px;border-radius:8px">`:t('none')}</p><p><b>${t('location')}:</b> ${esc(d.loc)}</p><p><b>${t('category')}:</b> ${CATS[d.cat]} ${tc(d.cat)}</p></div>`;
+if(s==5){const c=S.done;return `<div class="card" style="text-align:center"><h1>✅</h1><h2>${t('submitted_title')}</h2><p><b>${t('complaint_id')}:</b> ${c.id}</p><p><b>${t('category')}:</b> ${tc(c.cat)}</p><p><b>${t('location')}:</b> ${esc(c.loc)}</p><p><b>${t('status')}:</b> ${ts(c.st)}</p><button class=btn onclick="openC('${c.id}')">${t('view_details')}</button> <button class="btn s" onclick="go('mine')">${t('my_complaints')}</button></div>`}
+if(s==6){const e=q(S.dup);return `<div class="card ai"><h2>${t('similar_title')}</h2><p>${t('similar_text',{n:e.n,cat:tc(e.cat)})}</p><p class=mu>${t('similar_note')}</p><button class=btn onclick="support('${e.id}')">${t('support_existing')}</button> <button class="btn s" onclick="mk()">${t('submit_new')}</button></div>`}
+return `<h2>${t('report_a_problem')}</h2><p class=mu>${t('step_x',{s,l:t(lab[s-1])})}</p><div class=card>${b}<p style="margin-top:14px">${bk} ${nx}</p></div>`}
+function nextS(){const d=S.dr,s=S.step;if(s==1&&!d.d.trim())return toast(t('err_describe'));if(s==2&&!d.loc)return toast(t('err_location'));if(s==3&&!d.cat)return toast(t('err_category'));stopMic();S.step++;R()}
+/* photo — previewed locally, uploaded to /api/photos on submit */
+function pickPhoto(inp){const f=inp.files&&inp.files[0];inp.value='';if(!f)return;
+if(!/^image\/(jpe?g|png|webp)$/i.test(f.type)&&!/\.(jpe?g|png|webp)$/i.test(f.name))return toast(t('photo_type_error'));
+prepPhoto(f).then(b=>{if(S.dr.photo)URL.revokeObjectURL(S.dr.photo);S.dr.file=b;S.dr.photo=URL.createObjectURL(b);R()}).catch(()=>toast(t('photo_read_error')))}
+async function prepPhoto(f){if(f.size<=3.5e6&&/^image\/(jpe?g|png|webp)$/i.test(f.type))return f;const img=await createImageBitmap(f),k=Math.min(1,2000/Math.max(img.width,img.height)),cv=document.createElement('canvas');
+cv.width=Math.round(img.width*k);cv.height=Math.round(img.height*k);cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);return new Promise((res,rej)=>cv.toBlob(b=>b?res(b):rej(),'image/jpeg',.85))}
+/* voice input — Web Speech API in the user's preferred language */
+let REC=null;
+function micUI(){const b=$('#micb');if(!b)return;b.className=REC?'btn':'btn s';b.textContent=REC?t('stop_recording'):t('voice_input')}
+function stopMic(){if(REC){try{REC.stop()}catch(e){}}}
+const joinT=(a,b)=>b.trim()?(a&&!/\s$/.test(a)?a+' ':a)+b.trim():a;
+async function mic(){if(REC)return stopMic();const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return toast(t('voice_unsupported'));
+if(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia){try{const s=await navigator.mediaDevices.getUserMedia({audio:true});s.getTracks().forEach(x=>x.stop())}catch(e){return toast(/NotAllowed|Security|Permission/.test(e.name)?t('mic_denied'):t('voice_error'))}}
+const r=new SR(),base=S.dr.d||'';let fin='';r.lang=LANGS[LANG][1];r.continuous=true;r.interimResults=true;
+REC=r;micUI();r.onstart=()=>toast(t('listening'));
+r.onresult=e=>{let tmp='';for(let i=e.resultIndex;i<e.results.length;i++){const x=e.results[i];x.isFinal?fin+=x[0].transcript+' ':tmp+=x[0].transcript}S.dr.d=joinT(base,fin+tmp);const ta=$('#dsc');if(ta)ta.value=S.dr.d};
+r.onerror=e=>{if(e.error=='aborted')return;toast(e.error=='not-allowed'||e.error=='service-not-allowed'?t('mic_denied'):e.error=='no-speech'?t('no_speech'):e.error=='language-not-supported'?t('voice_unsupported'):t('voice_error'))};
+r.onend=()=>{if(REC==r)REC=null;S.dr.d=joinT(base,fin);const ta=$('#dsc');if(ta)ta.value=S.dr.d;micUI()};
+try{r.start()}catch(e){REC=null;micUI();toast(t('voice_error'))}}
+function sub(){const d=S.dr,e=C.filter(c=>c.cat==d.cat&&c.st!='Resolved'&&!mine(c)&&c.lat!=null&&d.lat!=null&&hav([d.lat,d.lng],[c.lat,c.lng])<=300).sort((a,b)=>b.n-a.n)[0];if(e){S.dup=e.id;S.step=6;R()}else mk()}
+async function mk(){if(S.busy)return;S.busy=1;const d=S.dr,b=$('#subb');if(b){b.disabled=true;b.textContent=t('submitting')}
+try{let photo='';if(d.file){const r=await fetch('/api/photos',{method:'POST',headers:{'content-type':d.file.type||'image/jpeg'},body:d.file}),j=await r.json().catch(()=>({}));if(!r.ok)throw new Error('photo');photo=j.url}
+const c=await api('complaints',{method:'POST',body:JSON.stringify({t:d.t,d:d.d,loc:d.loc,lat:d.lat,lng:d.lng,cat:d.cat,cit:S.user.name,photo})});put(c);S.done=c;S.step=5;R()}
+catch(e){toast(t(e.message=='photo'?'photo_upload_failed':'submit_failed'));if(b){b.disabled=false;b.textContent=t('submit_complaint')}}finally{S.busy=0}}
+async function support(id){if(S.busy)return;S.busy=1;try{put(await api('complaints/'+id,{method:'PATCH',body:JSON.stringify({support:1})}));toast(t('support_added'));openC(id)}catch(e){toast(t('update_failed'))}finally{S.busy=0}}
+/* admin */
+const AN=[['adash','a_dashboard'],['acomp','a_complaints'],['amap','a_map'],['adept','a_departments'],['aan','a_analytics'],['ausers','a_users'],['aset','a_settings']];
+function admV(){const P={adash,acomp,adetail:adet,amap,adept,aan,ausers,aset,notif:notV,profile:profV}[S.v]();
+return `<div class=adm><aside class=side><div class=brand style="color:#fff">Civic<b>AI</b></div>${AN.map(([k,l])=>`<a class="${S.v==k||(S.v=='adetail'&&k=='acomp')?'on':''}" onclick="go('${k}')">${t(l)}</a>`).join('')}<a onclick="out()">${t('a_logout')}</a></aside><main class=am><div class=row style="justify-content:flex-end"><button class="btn s" onclick="go('notif')">🔔</button><button class="btn s" onclick="go('profile')">👤 ${esc(S.adm.name)}</button></div>${P}</main></div>`}
+function adash(){const st=(n,l)=>`<div class="card stat"><b>${n}</b>${l}</div>`,n=f=>C.filter(f).length;
+return `<h2>${t('gov_dashboard')}</h2><div class=grid>${st(C.length,t('total_complaints'))}${st(n(c=>c.st!='In Progress'&&c.st!='Resolved'),t('pending'))}${st(n(c=>c.st=='In Progress'),t('in_progress'))}${st(n(c=>c.st=='Resolved'),t('resolved'))}${st(n(c=>c.pri=='High'),t('high_priority'))}</div>
+<div class="card ai" style="margin-top:16px"><h3>${t('ai_insights')} <span class=pill>${t('ai_badge')}</span></h3><ul><li>${t('ai_i1')}</li><li>${t('ai_i2')}</li><li>${t('ai_i3')}</li><li>${t('ai_i4')}</li></ul><p><b>${t('ai_priority')}:</b> <span class="pill High">${tp('High')}</span></p><p><b>${t('reason')}:</b> ${t('ai_reason_multi')}</p></div>
+<p style="margin-top:14px"><button class=btn onclick="go('acomp')">${t('review_complaints')}</button> <button class="btn s" onclick="go('amap')">${t('open_map')}</button></p>`}
+function acomp(){const f=S.fl,L=C.filter(c=>(!f.cat||c.cat==f.cat)&&(!f.pri||c.pri==f.pri)&&(!f.st||c.st==f.st)&&(!f.loc||c.loc.toLowerCase().includes(f.loc.toLowerCase()))&&(!f.dt||c.dt>=f.dt));
+return `<h2>${t('complaints')}</h2><div class=grid><select onchange="S.fl.cat=this.value;R()">${opt(Object.keys(CATS),f.cat,t('all_categories'),tc)}</select><select onchange="S.fl.pri=this.value;R()">${opt(['High','Medium','Low'],f.pri,t('all_priorities'),tp)}</select><select onchange="S.fl.st=this.value;R()">${opt(STS,f.st,t('all_statuses'),ts)}</select><input placeholder="${t('location')}" value="${esc(f.loc||'')}" onchange="S.fl.loc=this.value;R()"><input type=date value="${f.dt||''}" onchange="S.fl.dt=this.value;R()"></div>
+<div class="card tw" style="margin-top:12px"><table><tr><th>${t('th_id')}<th>${t('category')}<th>${t('location')}<th>${t('priority')}<th>${t('citizen')}<th>${t('date')}<th>${t('department')}<th>${t('status')}${L.map(c=>`<tr class=cc onclick="openC('${c.id}')"><td>${c.id}<td>${tc(c.cat)}<td>${esc(c.loc)}<td><span class="pill ${c.pri}">${tp(c.pri)}</span><td>${esc(c.cit)}<td>${c.dt}<td>${td(c.dept)}<td>${ts(c.st)}`).join('')}</table></div>`}
+function adet(){const c=q(S.sel);if(!c)return `<button class="btn s" onclick="go('acomp')">${t('back_arrow')}</button>${empty()}`;return `<button class="btn s" onclick="go('acomp')">${t('back_arrow')}</button><h2 style="margin-top:12px">${c.id} · ${CATS[c.cat]} ${tc(c.cat)}</h2><div class=two><div class=card><p>${esc(c.d)}</p><p class=mu>📍 ${esc(c.loc)} · ${esc(c.cit)} · ${c.dt}</p><label>${t('assign_department')}<select id=ad>${opt(['Unassigned',...DEPTS],c.dept,null,td)}</select></label><label>${t('change_priority')}<select id=ap>${opt(['High','Medium','Low'],c.pri,null,tp)}</select></label><label>${t('change_status')}<select id=as>${opt(STS,c.st,null,ts)}</select></label><label>${t('add_update')}<textarea id=au rows=2 placeholder="${t('visible_to_citizen')}"></textarea></label><button class=btn onclick="upd()">${t('save_changes')}</button> <button class="btn g" onclick="resolveC('${c.id}')">${t('mark_resolved')}</button>
+${(c.up||[]).map(u=>`<p class=mu>• ${esc(u)}</p>`).join('')}</div><div><div class=card><h3>${t('timeline')}</h3>${tl(c)}</div><div class="card ai" style="margin-top:12px"><b>${t('ai_priority_sim')}</b><p><span class="pill ${c.n>4?'High':'Medium'}">${tp(c.n>4?'High':'Medium')}</span></p><p class=mu>${c.n>4?t('ai_reason_multi'):t('ai_reason_few')}</p></div></div></div>`}
+async function patchC(id,body,msg){if(S.busy)return;S.busy=1;try{put(await api('complaints/'+id,{method:'PATCH',body:JSON.stringify(body)}));R();toast(msg)}catch(e){toast(t('update_failed'))}finally{S.busy=0}}
+function upd(){patchC(S.sel,{dept:$('#ad').value,pri:$('#ap').value,st:$('#as').value,update:$('#au').value.trim()},t('complaint_updated'))}
+function resolveC(id){patchC(id,{st:'Resolved'},t('marked_resolved'))}
+function amap(){return `<div class=row><h2>${t('map_heatmap')}</h2><button class="btn s" onclick="S.heat=!S.heat;R()">${S.heat?t('markers_only'):t('show_heatmap')}</button></div><div class=two><div>${mapBox()}<div id=pop class=card style="margin-top:12px"><span class=mu>${t('select_marker')}</span></div></div><div class=card><h3>${t('ward_24')}</h3><p><b>${t('n_complaints',{n:184})}</b></p><p>${tc('Roads')}: 73<br>${tc('Water')}: 42<br>${tc('Waste')}: 38<br>${tc('Streetlights')}: 31</p><p><span class="pill High">${t('hotspot')}</span></p><p><b>${t('top_recurring')}:</b> ${t('road_damage')}</p></div></div>`}
+function adept(){return `<h2>${t('departments')}</h2><div class=grid>${DEPTS.map(d=>`<div class=card><h3>${td(d)}</h3><p class=stat><b>${C.filter(c=>c.dept==d).length}</b>${t('assigned_complaints')}</p></div>`).join('')}</div>`}
+function aan(){const B=[['Roads',412],['Water',236],['Waste',198],['Streetlights',171],['Sanitation',142],['Electricity',61],['Other',64]],M=[140,165,190,210,255,324];
+return `<h2>${t('analytics')}</h2><div class=two><div class=card><h3>${t('by_category')}</h3>${B.map(([k,v])=>`<div class=row><span>${tc(k)}</span><span>${v}</span></div><div class=bar style="width:${v/412*100}%"></div>`).join('')}</div><div class=card><h3>${t('monthly_trend')}</h3><div style="display:flex;align-items:flex-end;gap:8px;height:180px">${M.map(v=>`<div class=bar style="flex:1;height:${v/324*100}%"></div>`).join('')}</div><p class=mu>${t('months_mock')}</p></div></div>`}
+function ausers(){return `<h2>${t('users')}</h2><div class="card tw"><table><tr><th>${t('name')}<th>${t('role')}<th>${t('location')}${[['Asha Rao','citizen','Ward 24'],['Priya N','citizen','Ward 24'],['Karan S','citizen','Ward 24'],['Ravi Kumar','admin','Roads Dept'],['Sunita M','admin','Water Dept']].map(u=>`<tr><td>${u[0]}<td>${t(u[1])}<td>${u[2]}`).join('')}</table></div>`}
+function aset(){return `<h2>${t('settings')}</h2><div class=card style="max-width:460px">${[1,2,3].map(i=>`<label><input type=checkbox checked style="width:auto"> ${t('set_'+i)}</label>`).join('')}<button class=btn onclick="toast(t('settings_saved'))">${t('save')}</button></div>`}
+R();load();setInterval(()=>{if(!document.hidden&&S.v!='land'&&S.v!='auth')load()},15000);document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.role)load()});
+</script></body></html>
